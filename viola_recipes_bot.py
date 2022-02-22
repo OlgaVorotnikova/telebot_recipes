@@ -1,27 +1,14 @@
 import telebot
+import json
 from telebot import types
 
-token = '5135613598:AAFJH30oRkRvwUDNVCg3IOsBZL_HdG563Io'
+token = '5135613598:AAFJH30oRkRvwUDNVCg3IOsBZL_HdG563Io'  # токен для связи с telegram
 
 bot = telebot.TeleBot(token)
 
-FOOD = {
-    "cуп": {"завтрак": False, "обед": True, "ужин": True, "перекус": True, "полдник": True, "салат": True,
-            "мясное блюдо": True, "десерт": True, "recipe": "Суп: В кастрюлю налить воду, всё закидать, подождать."},
-    "каша": {"тест": True, "завтрак": True, "обед": False, "ужин": True, "перекус": True, "полдник": True,
-             "салат": True, "мясное блюдо": True, "десерт": True,
-             "recipe": "Каша: \n В кастрюлю налить воду, всё закидать, подождать."},
-    "мясо": {"завтрак": False, "обед": True, "ужин": True, "перекус": True, "полдник": True, "салат": True,
-             "мясное блюдо": True, "десерт": True, "recipe": "В кастрюлю налить воду, всё закидать, подождать."},
-    "омлет": {"завтрак": True, "обед": False, "ужин": True, "перекус": True, "полдник": True, "салат": True,
-              "мясное блюдо": True, "десерт": True, "recipe": "В кастрюлю налить воду, всё закидать, подождать."},
-    "салат": {"завтрак": False, "обед": True, "ужин": True, "перекус": True, "полдник": True, "салат": True,
-              "мясное блюдо": True, "десерт": True, "recipe": "В кастрюлю налить воду, всё закидать, подождать."},
-    "запеканка": {"завтрак": True, "обед": False, "ужин": True, "перекус": True, "полдник": True, "салат": True,
-                  "мясное блюдо": True, "десерт": True, "recipe": "В кастрюлю налить воду, всё закидать, подождать."},
-    "кексы": {"завтрак": True, "обед": False, "ужин": True, "перекус": True, "полдник": True, "салат": True,
-              "мясное блюдо": True, "десерт": True, "recipe": "В кастрюлю налить воду, всё закидать, подождать."},
-}
+#Загружаем файл с рецептами в словарь FOOD
+with open('recipes.json') as json_file:
+    FOOD = json.load(json_file)
 
 
 def mainmenu():
@@ -42,50 +29,59 @@ def mainmenu():
 
 
 def recipe(food_key):
+    # Получаем рецепт для блюда "food_key"
     return FOOD[food_key]['recipe']
 
 
 def food(food_purpose):
-    # meal_purpose -> string (завтрак, 'lunch', 'dinner', 'snack')
-    list_b = []
+    # Из всего списка блюд (f) извлекаем только те, что подходят под цель (food_purpose: завтрак, десерт и т.д.)
+    # Возвращаем клавиатуру с этим списком.
+#    list_b = []
     markup = types.InlineKeyboardMarkup()
     for f in FOOD.keys():
         if (food_purpose in FOOD[f].keys()) and FOOD[f][food_purpose] == True:
-            list_b.append(types.InlineKeyboardButton(f, callback_data=f))
-    print(*list_b)
-    markup.add(*list_b)
+            markup.add(types.InlineKeyboardButton(f, callback_data=f))
+#            list_b.append(types.InlineKeyboardButton(f, callback_data=f))
+#    markup.add(*list_b)
     return markup
 
 
+# Действия при старте бота.
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(message.chat.id, "Привет✌️ ")
-    # Добавляем кнопку главного меню
+    # Добавляем кнопку возврата в главное меню.
     main_btn_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     main_btn = types.KeyboardButton("Главное меню")
     main_btn_keyboard.add(main_btn)
     bot.send_message(message.chat.id, 'Я подскажу вам, что приготовить.', reply_markup=main_btn_keyboard)
     # Добавляем кнопки меню
-    bot.send_message(message.chat.id, 'Нажми на кнопку:', reply_markup=mainmenu())
+    bot.send_message(message.chat.id, 'Нажмите на кнопку:', reply_markup=mainmenu())
 
 
 @bot.message_handler(content_types='text')
 def message_reply(message):
     if message.text == "Главное меню":
         bot.send_message(message.chat.id, 'Вы вернулись в главное меню', reply_markup=mainmenu())
+    else:
+        bot.send_message(message.chat.id, 'Бот не создан для общения.\nОн только помогает выбрать рецепт.')
 
 
+# Добавляем реакцию на нажатие кнопок меню.
 @bot.callback_query_handler(func=lambda call: True)
 def callback_food(call):
+    # Выбор блюд под цель.
     for f in FOOD.keys():
         if call.data in FOOD[f].keys():
             bot.send_message(call.message.chat.id, "Вам подойдут следующие блюда: ", reply_markup=food(call.data))
-            bot.send_message(call.message.chat.id, "Чтобы узнать рецепт, нажмите на кнопку с названием блюда")
+            bot.send_message(call.message.chat.id, "Чтобы узнать рецепт, нажмите на кнопку с названием блюда.")
             break
+    # Получение рецепта для блюда.
     for f in FOOD.keys():
         if call.data == f:
             rcpt = recipe(f)
-            bot.send_message(call.message.chat.id, rcpt)
+            message = f"{f}\n*************************\n{rcpt}"
+            bot.send_message(call.message.chat.id, message)
 
 
 # Запускаем бота
