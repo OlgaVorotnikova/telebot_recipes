@@ -1,13 +1,21 @@
 import telebot
 import json
 from telebot import types
+import urllib.request
 
 token = '5135613598:AAFJH30oRkRvwUDNVCg3IOsBZL_HdG563Io'  # токен для связи с telegram
 
 bot = telebot.TeleBot(token)
 
+
+# Загружаем файл с рецептами с google disk.
+google_rec = urllib.request.urlopen("https://drive.google.com/u/0/uc?id=1YIWVpmf2FFg7GzAV6CF1mQYVOxc8KXmU&export=download").read()
+f = open("recipes1.json", "wb")
+f.write(google_rec)
+f.close()
+
 #Загружаем файл с рецептами в словарь FOOD
-with open('recipes.json') as json_file:
+with open('recipes1.json') as json_file:
     FOOD = json.load(json_file)
 
 
@@ -26,6 +34,14 @@ def mainmenu():
                 btn_a.append(types.InlineKeyboardButton(k, callback_data=k))
     markup.add(*btn_a)
     return markup
+
+
+def mainbtn():
+    # Делаем кнопку возврата в главное меню, прикреплённая снизу.
+    main_btn_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    main_btn = types.KeyboardButton("Главное меню")
+    main_btn_keyboard.add(main_btn)
+    return main_btn_keyboard
 
 
 def recipe(food_key):
@@ -51,10 +67,7 @@ def food(food_purpose):
 def start_message(message):
     bot.send_message(message.chat.id, "Привет✌️ ")
     # Добавляем кнопку возврата в главное меню.
-    main_btn_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    main_btn = types.KeyboardButton("Главное меню")
-    main_btn_keyboard.add(main_btn)
-    bot.send_message(message.chat.id, 'Я подскажу вам, что приготовить.', reply_markup=main_btn_keyboard)
+    bot.send_message(message.chat.id, 'Я подскажу вам, что приготовить.', reply_markup=mainbtn())
     # Добавляем кнопки меню
     bot.send_message(message.chat.id, 'Нажмите на кнопку:', reply_markup=mainmenu())
 
@@ -64,7 +77,7 @@ def message_reply(message):
     if message.text == "Главное меню":
         bot.send_message(message.chat.id, 'Вы вернулись в главное меню', reply_markup=mainmenu())
     else:
-        bot.send_message(message.chat.id, 'Бот не создан для общения.\nОн только помогает выбрать рецепт.')
+        bot.send_message(message.chat.id, 'Бот не создан для общения.\nОн только помогает выбрать рецепт.', reply_markup=mainbtn())
 
 
 # Добавляем реакцию на нажатие кнопок меню.
