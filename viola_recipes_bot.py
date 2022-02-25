@@ -8,14 +8,14 @@ token = '5135613598:AAFJH30oRkRvwUDNVCg3IOsBZL_HdG563Io'  # токен для с
 bot = telebot.TeleBot(token)
 
 
-# Загружаем файл с рецептами с google disk.
+# Загружаем файл с рецептами с google drive.
 google_rec = urllib.request.urlopen("https://drive.google.com/u/0/uc?id=1YIWVpmf2FFg7GzAV6CF1mQYVOxc8KXmU&export=download").read()
 f = open("recipes1.json", "wb")
 f.write(google_rec)
 f.close()
 
 #Загружаем файл с рецептами в словарь FOOD
-with open('recipes1.json') as json_file:
+with open('recipes1.json', encoding="utf-8") as json_file:
     FOOD = json.load(json_file)
 
 
