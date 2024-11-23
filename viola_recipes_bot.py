@@ -3,7 +3,7 @@ import json
 from telebot import types
 import urllib.request
 
-token = '5135613598:AAFJH30oRkRvwUDNVCg3IOsBZL_HdG563Io'  # токен для связи с telegram
+token = ''  # токен для связи с telegram
 
 bot = telebot.TeleBot(token)
 
